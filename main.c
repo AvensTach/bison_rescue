@@ -1,4 +1,5 @@
 #include "common.h"
+#include "file_writer.h"
 
 volatile sig_atomic_t ready_count = 0;
 volatile sig_atomic_t time_is_up = 0;
@@ -37,12 +38,48 @@ int main(int argc, char *argv[]) {
         pid_t pid = fork();
         if (pid < 0) { perror("fork failed"); exit(EXIT_FAILURE); }
         else if (pid == 0) {
-            close(pipes_fd[i][1]);
+
+            close(pipes_fd[i][0]);
+
+            srand(time(NULL) ^ getpid());
+
             kill(getppid(), SIGUSR1);
-            char buffer[TEXT_SIZE];
-            read(pipes_fd[i][0], buffer, TEXT_SIZE);
-            printf("Expedition %d: Arrived at %s and ready!\n", getpid(), buffer);
-            while (1) { pause(); }
+
+            char territory[50];
+            ssize_t bytes_read = read(pipes_fd[i][0], territory, sizeof(territory) - 1);
+            if (bytes_read > 0) {
+                territory[bytes_read] = '\0';
+            } else {
+                strcpy(territory, "Unknown Territory");
+            }
+            close(pipes_fd[i][0]);
+
+            printf("Expedition [PID %d]: Arrived at %s and starting observations!\n", getpid(), territory);
+            char observer_name[50];
+            snprintf(observer_name, sizeof(observer_name), "Researcher_%d", getpid());
+
+            while (1) {
+                sleep(2 + rand() % 4);
+
+                MsgBuf msg;
+                msg.mtype = 1;
+
+                strncpy(msg.data.observing_personname, observer_name, sizeof(msg.data.observing_personname));
+                strncpy(msg.data.territory_name, territory, sizeof(msg.data.territory_name));
+                msg.data.bison_number = 1 + rand() % 15;
+                msg.data.bison_age = (BisonAge)(rand() % 3);
+                msg.data.observation_time = time(NULL);
+
+                save_observation_to_file("observations.txt", &msg.data);
+
+                if (msgsnd(msg_qid, &msg, sizeof(Observation), IPC_NOWAIT) == -1) {
+                    perror("Expedition: msgsnd failed");
+                } else {
+                    printf("Expedition [PID %d]: Sent report (%d bisons at %s)\n", 
+                           getpid(), msg.data.bison_number, msg.data.territory_name);
+                }
+            }
+
             exit(EXIT_SUCCESS);
         } else {
             children[i] = pid;
