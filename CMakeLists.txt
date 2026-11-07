@@ -4,4 +4,6 @@ project(bison_rescue_clean C)
 set(CMAKE_C_STANDARD 99)
 
 add_executable(bison_rescue_clean main.c
-        common.h)
+        common.h
+        file_writer.c
+        file_writer.h)
