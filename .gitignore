@@ -268,3 +268,12 @@ fabric.properties
 
 observations.txt
 bison_rescue
+
+# CMake 
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+.vs/
+
+bison_rescue_clean

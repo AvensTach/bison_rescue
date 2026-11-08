@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
             exit(EXIT_SUCCESS);
         } else {
             children[i] = pid;
-            close(pipes_fd[i][0]);
+            close(pipes_fd[i][1]);
         }
     }
 
@@ -102,8 +102,9 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
 
     while (!time_is_up) {
-        if (msgrcv(msg_qid, &msg, sizeof(Observation), 0, IPC_NOWAIT) != -1) {
+        while (msgrcv(msg_qid, &msg, sizeof(Observation), 0, IPC_NOWAIT) != -1) {
             printf("Ministry: Received observation from %s (Bisons: %d)\n", msg.data.territory_name, msg.data.bison_number);
+            save_observation_to_file("observations.txt", &msg.data);
         }
         if (rand() % 100 < 5) {
             int victim = rand() % num_expeditions;
