@@ -43,7 +43,6 @@ int send_observation(int msgid, Observation* data) {
     return msgsnd(msgid, &msg, sizeof(Observation), 0);
 }
 
-/* Added msgflg so the parent can read without blocking */
 int receive_observation(int msgid, Observation* data, int msgflg) {
     MsgBuf msg;
     int res = msgrcv(msgid, &msg, sizeof(Observation), MSG_TYPE_OBSERVATION, msgflg);
@@ -62,14 +61,12 @@ void create_pipes(int num_expeditions, int fd_array[][2]) {
     }
 }
 
-/* Fixed syntax typo here */
 void send_territory_name(int write_fd, const char* territory) {
     if (write(write_fd, territory, strlen(territory) + 1) == -1) {
         perror("write to pipe failed");
     }
 }
 
-/* Fixed syntax typo here */
 void receive_territory_name(int read_fd, char* buffer, size_t max_len) {
     if (read(read_fd, buffer, max_len) == -1) {
         perror("read from pipe failed");
