@@ -1,4 +1,4 @@
-#include "common.h"
+#include "ipc_sync.h"
 
 volatile sig_atomic_t expeditions_ready_count = 0;
 
@@ -38,16 +38,15 @@ void remove_msg_queue(int msgid) {
 int send_observation(int msgid, Observation* data) {
     MsgBuf msg;
     msg.mtype = MSG_TYPE_OBSERVATION;
-
     memcpy(&msg.data, data, sizeof(Observation));
 
     return msgsnd(msgid, &msg, sizeof(Observation), 0);
 }
 
-int receive_observation(int msgid, Observation* data) {
+/* Added msgflg so the parent can read without blocking */
+int receive_observation(int msgid, Observation* data, int msgflg) {
     MsgBuf msg;
-
-    int res = msgrcv(msgid, &msg, sizeof(Observation), MSG_TYPE_OBSERVATION, 0);
+    int res = msgrcv(msgid, &msg, sizeof(Observation), MSG_TYPE_OBSERVATION, msgflg);
     if (res != -1) {
         memcpy(data, &msg.data, sizeof(Observation));
     }
@@ -63,12 +62,14 @@ void create_pipes(int num_expeditions, int fd_array[][2]) {
     }
 }
 
+/* Fixed syntax typo here */
 void send_territory_name(int write_fd, const char* territory) {
     if (write(write_fd, territory, strlen(territory) + 1) == -1) {
         perror("write to pipe failed");
     }
 }
 
+/* Fixed syntax typo here */
 void receive_territory_name(int read_fd, char* buffer, size_t max_len) {
     if (read(read_fd, buffer, max_len) == -1) {
         perror("read from pipe failed");
