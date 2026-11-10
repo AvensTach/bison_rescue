@@ -37,8 +37,8 @@ int main(int argc, char *argv[]) {
     sa.sa_handler = handle_start;
     sa.sa_flags = SA_RESTART;
     sigemptyset(&sa.sa_mask);
-    if (sigaction(SIGUSR2, &sa, NULL) == -1) {
-        perror("sigaction SIGUSR2 failed");
+    if (sigaction(SIGRTMIN + 1, &sa, NULL) == -1) {
+        perror("sigaction SIGRTMIN+1 failed");
         exit(EXIT_FAILURE);
     }
 
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
             srand(time(NULL) ^ getpid());
 
             /* Task 'a': Signal arrival */
-            kill(getppid(), SIGUSR1);
+            kill(getppid(), SIGRTMIN);
 
             /* Task 'b': Receive territory */
             char territory[50];
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 
             /* Task 'b': Print identification text and signal ready to work */
             printf("Expedition [PID %d]: Arrived at %s and ready to work!\n", getpid(), territory);
-            kill(getppid(), SIGUSR2);
+            kill(getppid(), SIGRTMIN + 1);
 
             char observer_name[50];
             snprintf(observer_name, sizeof(observer_name), "Researcher_%d", getpid());

@@ -12,8 +12,9 @@ void setup_signal_handlers(void) {
     sa.sa_flags = SA_RESTART;
     sigemptyset(&sa.sa_mask);
 
-    if (sigaction(SIGUSR1, &sa, NULL) == -1) {
-        perror("sigaction SIGUSR1 failed");
+    // Використовуємо SIGRTMIN замість SIGUSR1
+    if (sigaction(SIGRTMIN, &sa, NULL) == -1) {
+        perror("sigaction SIGRTMIN failed");
         exit(EXIT_FAILURE);
     }
 }
